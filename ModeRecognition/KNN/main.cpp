@@ -113,8 +113,8 @@ il void knn(ll l, ll r)
             for(re ll k = 0; k < train_image_size; ++k)
             {
                 ll gap = test_data[i*test_image_size+k]-train_data[j*train_image_size+k];
-                //node.distance += gap*gap;     //Å·À­¾àÀë
-                node.distance += abs(gap);      //Âü¹þ¶Ù¾àÀë
+                node.distance += gap*gap;     //Å·À­¾àÀë
+                //node.distance += abs(gap);      //Âü¹þ¶Ù¾àÀë
             }
             if(pq.size() < k)
             {
@@ -173,17 +173,17 @@ int main()
     ll MAXK = 20, PIECE = 10;
     ll MIN_train_data_size = train_data_size/PIECE;
     ll MIN_test_data_size = test_data_size/NUM_THREADS;
-    for(re ll i = 1; i <= MAXK; ++i)
+    for(re ll i = 9; i <= MAXK; ++i)
     {
         k = i;
         //´æÈëÊý¾Ý
         char file[20] = "KNNx.txt";
+        file[3] = i%10 + '0';
         /*
         char file[20] = "KNN1x.txt";
         file[4] = i%10 + '0';
         if(!(i%10)) file[3] = '2';
         */
-        file[3] = i%10 + '0';
         FILE *fp = fopen(file, "w");
         for(re ll j = 1; j <= PIECE; ++j)
         {
