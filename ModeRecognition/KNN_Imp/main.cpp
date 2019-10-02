@@ -5,6 +5,7 @@
 #define re register
 #define il inline
 #define ll long long
+#define ld long double
 using namespace std;
 const ll NUM_THREADS = 5;
 const ll MAXN = 1e6+5;
@@ -116,7 +117,7 @@ il void knn(ll l, ll r)
                 node.distance += gap*gap;     //欧拉距离
                 //node.distance += abs(gap);      //曼哈顿距离
             }
-            if(pq.size() < k)
+            if(pq.size() < k+1)                 //加权后距离最大的最近邻不参与分类
             {
                 pq.push(node);
             }
@@ -130,13 +131,18 @@ il void knn(ll l, ll r)
             }
         }
         ll label_nearst = 0;
-        ll label_nearst_cnt = 0;
-        ll label_cnt[label] = {0};
+        //ll label_nearst_cnt = 0;
+        //ll label_cnt[label] = {0};    //传统KNN
+        ld label_nearst_cnt = 0;
+        ld label_cnt[label] = {0};      //加权KNN
+        ld maxdis = pq.top().distance;           //最大近邻距离
+        pq.pop();
         while(!pq.empty())
         {
+            ld curdis = pq.top().distance;
             ll curlabel = train_label[pq.top().order];
             pq.pop();
-            ++label_cnt[curlabel];
+            label_cnt[curlabel] += (maxdis-curdis)/maxdis;
             if(label_cnt[curlabel] > label_nearst_cnt)
             {
                 label_nearst = curlabel;
@@ -173,7 +179,7 @@ int main()
     ll MAXK = 20, PIECE = 10;
     ll MIN_train_data_size = train_data_size/PIECE;
     ll MIN_test_data_size = test_data_size/NUM_THREADS;
-    for(re ll i = 9; i <= MAXK; ++i)
+    for(re ll i = 1; i <= 9; ++i)
     {
         k = i;
         //存入数据

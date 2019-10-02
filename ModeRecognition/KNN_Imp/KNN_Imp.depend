@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1569990554 source:d:\projects\moderecognition\knn_imp\main.cpp
+	<bits/stdc++.h>
+	<iostream>
+	<string>
+	<atomic>
+

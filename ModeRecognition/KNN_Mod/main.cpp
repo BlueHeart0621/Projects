@@ -5,6 +5,7 @@
 #define re register
 #define il inline
 #define ll long long
+#define ld long double
 using namespace std;
 const ll NUM_THREADS = 5;
 const ll MAXN = 1e6+5;
@@ -31,7 +32,7 @@ struct NODE
 
 
 clock_t start, finish;
-ll k = 10, correct = 0;
+ll k = 10, correct = 0, test_sum = 0, train_sum = 0;
 ll train_data_magic_number, train_label_magic_number, test_data_magic_number, test_label_magic_number;
 ll train_data_size, train_label_size, train_image_row, train_image_col, train_image_size;
 ll test_data_size, test_label_size, test_image_row, test_image_col, test_image_size;
@@ -99,15 +100,34 @@ void readdata()
     printf("Read End\n");
 }
 
+//判断是否属于忽略项
+bool judge(ll label)
+{
+    ll ignore_cnt = 5;
+    ll ignore[5] = {5,6,7,8,9};
+    //ll ignore[5] = {0,1,2,3,4};
+    for(re ll i = 0; i < ignore_cnt; ++i)
+    {
+        if(label == ignore[i])   return true;
+    }
+    return false;
+}
+
 //根据KNN算法预测当前点的标签
 il void knn(ll l, ll r)
 {
     ll result = 0;
     for(re ll i = l; i < r; ++i)
     {
+        //筛出忽略项
+        if(judge(test_label[i]))    continue;
+        mtx.lock();
+        ++test_sum;
+        mtx.unlock();
         priority_queue <NODE> pq;
         for(re ll j = 0; j < train_data_size; ++j)
         {
+            if(judge(train_label[j]))   continue;
             NODE node;
             node.order = j;
             for(re ll k = 0; k < train_image_size; ++k)
@@ -116,7 +136,7 @@ il void knn(ll l, ll r)
                 node.distance += gap*gap;     //欧拉距离
                 //node.distance += abs(gap);      //曼哈顿距离
             }
-            if(pq.size() < k)
+            if(pq.size() < k+1)                 //加权后距离最大的最近邻不参与分类
             {
                 pq.push(node);
             }
@@ -130,13 +150,18 @@ il void knn(ll l, ll r)
             }
         }
         ll label_nearst = 0;
-        ll label_nearst_cnt = 0;
-        ll label_cnt[label] = {0};
+        //ll label_nearst_cnt = 0;
+        //ll label_cnt[label] = {0};    //传统KNN
+        ld label_nearst_cnt = 0;
+        ld label_cnt[label] = {0};      //加权KNN
+        ld maxdis = pq.top().distance;           //最大近邻距离
+        pq.pop();
         while(!pq.empty())
         {
+            ld curdis = pq.top().distance;
             ll curlabel = train_label[pq.top().order];
             pq.pop();
-            ++label_cnt[curlabel];
+            label_cnt[curlabel] += (maxdis-curdis)/maxdis;
             if(label_cnt[curlabel] > label_nearst_cnt)
             {
                 label_nearst = curlabel;
@@ -160,8 +185,8 @@ il void knn(ll l, ll r)
 //打印信息
 void print(FILE *fp)
 {
-    fprintf(fp, "K值：%lld, 训练集大小：%lld, 准确率：%f, 运行时间：%f seconds\n", k, train_data_size, ((double)correct*100)/(double)test_data_size, (double)(finish-start)/CLOCKS_PER_SEC);
-    printf("K值：%lld, 训练集大小：%lld, 准确率：%f, 运行时间：%f seconds\n", k, train_data_size, ((double)correct*100)/(double)test_data_size, (double)(finish-start)/CLOCKS_PER_SEC);
+    fprintf(fp, "K值：%lld, 训练集大小：%lld, 准确率：%f, 运行时间：%f seconds\n", k, train_sum, ((double)correct*100)/(double)test_sum, (double)(finish-start)/CLOCKS_PER_SEC);
+    printf("K值：%lld, 训练集大小：%lld, 准确率：%f, 运行时间：%f seconds\n", k, train_sum, ((double)correct*100)/(double)test_sum, (double)(finish-start)/CLOCKS_PER_SEC);
 }
 
 int main()
@@ -173,24 +198,31 @@ int main()
     ll MAXK = 20, PIECE = 10;
     ll MIN_train_data_size = train_data_size/PIECE;
     ll MIN_test_data_size = test_data_size/NUM_THREADS;
-    for(re ll i = 9; i <= MAXK; ++i)
+    for(re ll i = 16; i <= 20; ++i)
     {
         k = i;
         //存入数据
-        char file[20] = "KNNx.txt";
-        file[3] = i%10 + '0';
-        /*
+        //char file[20] = "KNNx.txt";
+        //file[3] = i%10 + '0';
+
         char file[20] = "KNN1x.txt";
         file[4] = i%10 + '0';
         if(i>10 && !(i%10)) file[3] = '2';
-        */
+
         FILE *fp = fopen(file, "w");
         for(re ll j = 1; j <= PIECE; ++j)
         {
             //开始计时
             start = clock();
             correct = 0;        //准确个数
+            test_sum = 0;           //测试集总数
+            train_sum = 0;          //训练集总数
             train_data_size = MIN_train_data_size*j;
+            for(re ll i = 0; i < train_data_size; ++i)
+            {
+                if(judge(train_label[i]))   continue;
+                ++train_sum;
+            }
             for(re ll l = 0; l < NUM_THREADS; ++l)
             {
                 tids[l] = thread(knn, MIN_test_data_size*l, MIN_test_data_size*(l+1));

@@ -1,8 +1,8 @@
 clc
 clear
 
-%% EulerDistance KNN
-EDpath = "EulerDistance/";
+%% 01234 KNN
+EDpath = "01234/";
 EDfiles = dir(fullfile(EDpath,"*.txt"));
 EDcnt = 0;
 [n,~] = size(EDfiles);
@@ -23,7 +23,7 @@ end
 EDtmp = str2num(char(EDdata{:,2}))+str2num(char(EDdata{:,4}));
 [~,EDindex] = sort(EDtmp);
 EDxlsx = EDdata(EDindex,:);
-xlswrite("EulerDistance.xlsx",EDxlsx);
+xlswrite("01234.xlsx",EDxlsx);
 % 数据可视化
 figure
 [m,~] = size(EDxlsx);
@@ -37,14 +37,14 @@ for i = 1:n
     leg(i) = "K=" + num2str(i);
     hold on
 end
-title("KNN-Euler Distance");
+title("KNN-(01234)Weighted Euler Distance");
 xlabel("训练集大小");
 ylabel("准确度%");
 legend(leg,"location","NorthWest");
 set(gca,'fontsize',20);
 
-%% ManhattanDistance KNN
-MDpath = "ManhattanDistance/";
+%% 56789 KNN
+MDpath = "56789/";
 MDfiles = dir(fullfile(MDpath,"*.txt"));
 MDcnt = 0;
 [n,~] = size(MDfiles);
@@ -65,7 +65,7 @@ end
 MDtmp = str2num(char(MDdata{:,2}))+str2num(char(MDdata{:,4}));
 [~,MDindex] = sort(MDtmp);
 MDxlsx = MDdata(MDindex,:);
-xlswrite("ManhattanDistance.xlsx",MDxlsx);
+xlswrite("56789.xlsx",MDxlsx);
 % 数据可视化
 figure
 [m,~] = size(MDxlsx);
@@ -79,7 +79,7 @@ for i = 1:n
     leg(i) = "K=" + num2str(i);
     hold on
 end
-title("KNN-Manhattan Distance");
+title("KNN-(56789)Weighted Euler Distance");
 xlabel("训练集大小");
 ylabel("准确度%");
 legend(leg,"location","NorthWest");
